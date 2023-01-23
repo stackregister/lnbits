@@ -193,6 +193,7 @@ class EditableSettings(
 
 class EnvSettings(LNbitsSettings):
     debug: bool = Field(default=False)
+    file_log: bool = Field(default=False)
     host: str = Field(default="127.0.0.1")
     port: int = Field(default=5000)
     forwarded_allow_ips: str = Field(default="*")

@@ -1,6 +1,7 @@
 import asyncio
 import importlib
 import logging
+import os
 import signal
 import sys
 import traceback
@@ -287,6 +288,15 @@ def configure_logger() -> None:
     log_level: str = "DEBUG" if settings.debug else "INFO"
     formatter = Formatter()
     logger.add(sys.stderr, level=log_level, format=formatter.format)
+
+    if settings.file_log:
+        # New log file is created each day at noon
+        logger.add(
+            os.path.join("lnbits.log"),
+            level=log_level,
+            format=formatter.format,
+            rotation="12:00",
+        )
 
     logging.getLogger("uvicorn").handlers = [InterceptHandler()]
     logging.getLogger("uvicorn.access").handlers = [InterceptHandler()]

@@ -35,6 +35,7 @@ coverage.xml
 node_modules
 lnbits/static/bundle.*
 docker
+*.log
 
 # Nix
 *result*
