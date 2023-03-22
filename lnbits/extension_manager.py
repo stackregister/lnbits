@@ -54,7 +54,7 @@ class Extension(NamedTuple):
 
 class ExtensionManager:
     def __init__(self):
-        p = Path(settings.lnbits_path, "extensions")
+        p = Path(settings.lnbits_data_folder, "extensions")
         os.makedirs(p, exist_ok=True)
         self._extension_folders: List[Path] = [f for f in p.iterdir() if f.is_dir()]
 
@@ -202,17 +202,17 @@ class InstallableExtension(BaseModel):
 
     @property
     def zip_path(self) -> Path:
-        extensions_data_dir = Path(settings.lnbits_data_folder, "extensions")
+        extensions_data_dir = Path(settings.lnbits_data_folder, "extensions-zips")
         os.makedirs(extensions_data_dir, exist_ok=True)
         return Path(extensions_data_dir, f"{self.id}.zip")
 
     @property
     def ext_dir(self) -> Path:
-        return Path(settings.lnbits_path, "extensions", self.id)
+        return Path(settings.lnbits_data_folder, "extensions", self.id)
 
     @property
     def ext_upgrade_dir(self) -> Path:
-        return Path("lnbits", "upgrades", f"{self.id}-{self.hash}")
+        return Path(settings.lnbits_data_folder, "upgrades", f"{self.id}-{self.hash}")
 
     @property
     def module_name(self) -> str:
@@ -254,7 +254,7 @@ class InstallableExtension(BaseModel):
 
     def extract_archive(self):
         logger.info(f"Extracting extension {self.name}.")
-        os.makedirs(Path("lnbits", "upgrades"), exist_ok=True)
+        os.makedirs(Path(settings.lnbits_data_folder, "upgrades"), exist_ok=True)
         shutil.rmtree(self.ext_upgrade_dir, True)
         with zipfile.ZipFile(self.zip_path, "r") as zip_ref:
             zip_ref.extractall(self.ext_upgrade_dir)
@@ -286,9 +286,9 @@ class InstallableExtension(BaseModel):
         shutil.rmtree(self.ext_dir, True)
         shutil.copytree(
             Path(self.ext_upgrade_dir, self.id),
-            Path(settings.lnbits_path, "extensions", self.id),
+            Path(settings.lnbits_data_folder, "extensions", self.id),
         )
-        logger.success(f"Extension {self.name} installed.")
+        logger.success(f"Extension '{self.name}' zip extracted.")
 
     def nofiy_upgrade(self) -> None:
         """Update the list of upgraded extensions. The middleware will perform redirects based on this"""
