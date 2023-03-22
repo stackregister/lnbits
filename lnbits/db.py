@@ -139,15 +139,15 @@ class Database(Compat):
                     f = "%Y-%m-%d %H:%M:%S"
                 return time.mktime(datetime.datetime.strptime(value, f).timetuple())
 
-            psycopg2.extensions.register_type(
-                psycopg2.extensions.new_type(
-                    psycopg2.extensions.DECIMAL.values,
+            psycopg2.extensions.register_type(  # type: ignore
+                psycopg2.extensions.new_type(  # type: ignore
+                    psycopg2.extensions.DECIMAL.values,  # type: ignore
                     "DEC2FLOAT",
                     lambda value, curs: float(value) if value is not None else None,
                 )
             )
-            psycopg2.extensions.register_type(
-                psycopg2.extensions.new_type(
+            psycopg2.extensions.register_type(  # type: ignore
+                psycopg2.extensions.new_type(  # type: ignore
                     (1082, 1083, 1266),
                     "DATE2INT",
                     lambda value, curs: time.mktime(value.timetuple())
@@ -156,8 +156,8 @@ class Database(Compat):
                 )
             )
 
-            psycopg2.extensions.register_type(
-                psycopg2.extensions.new_type(
+            psycopg2.extensions.register_type(  # type: ignore
+                psycopg2.extensions.new_type(  # type: ignore
                     (1184, 1114), "TIMESTAMP2INT", _parse_timestamp
                 )
             )
@@ -187,7 +187,7 @@ class Database(Compat):
     async def connect(self):
         await self.lock.acquire()
         try:
-            async with self.engine.connect() as conn:
+            async with self.engine.connect() as conn:  # type: ignore
                 async with conn.begin() as txn:
                     wconn = Connection(conn, txn, self.type, self.name, self.schema)
 
@@ -208,7 +208,9 @@ class Database(Compat):
     async def fetchall(self, query: str, values: tuple = ()) -> list:
         async with self.connect() as conn:
             result = await conn.execute(query, values)
-            return await result.fetchall()
+            rows = await result.fetchall()
+            await result.close()
+            return rows
 
     async def fetchone(self, query: str, values: tuple = ()):
         async with self.connect() as conn:
@@ -219,7 +221,9 @@ class Database(Compat):
 
     async def execute(self, query: str, values: tuple = ()):
         async with self.connect() as conn:
-            return await conn.execute(query, values)
+            result = await conn.execute(query, values)
+            await result.close()
+            return result
 
     @asynccontextmanager
     async def reuse_conn(self, conn: Connection):
