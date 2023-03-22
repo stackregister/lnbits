@@ -3,13 +3,14 @@ import glob
 import importlib
 import logging
 import os
+from pathlib import Path
 import shutil
 import signal
 import sys
 import traceback
 from http import HTTPStatus
-from typing import Callable, List
-
+from typing import Callable, List, Optional
+from importlib.machinery import ModuleSpec
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -153,7 +154,7 @@ async def check_installed_extensions(app: FastAPI):
     The 'data' directory (where the '.zip' files live) is expected to persist state.
     Zips that are missing will be re-downloaded.
     """
-    shutil.rmtree(os.path.join("lnbits", "upgrades"), True)
+    shutil.rmtree(os.path.join(settings.lnbits_data_folder, "upgrades"), True)
     await load_disabled_extension_list()
     installed_extensions = await build_all_installed_extensions_list()
 
@@ -199,7 +200,7 @@ def check_installed_extension(ext: InstallableExtension) -> bool:
         return True
 
     zip_files = glob.glob(
-        os.path.join(settings.lnbits_data_folder, "extensions", "*.zip")
+        os.path.join(settings.lnbits_data_folder, "extensions-zips", "*.zip")
     )
 
     if f"./{str(ext.zip_path)}" not in zip_files:
@@ -246,9 +247,20 @@ def register_new_ext_routes(app: FastAPI) -> Callable:
     return register_new_ext_routes_fn
 
 
+def import_extension_module(ext: Extension):
+    ext_path = Path(settings.lnbits_data_folder, "extensions", ext.code, "__init__.py")
+    spec: Optional[ModuleSpec] = importlib.util.spec_from_file_location(ext.module_name, str(ext_path))
+    assert spec, f"Module spec not found for '{ext.module_name}'"
+    module = importlib.util.module_from_spec(spec)
+    assert module, f"Cannot load module '{ext.module_name}' from spec"
+    sys.modules[ext.module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
 def register_ext_routes(app: FastAPI, ext: Extension) -> None:
     """Register FastAPI routes for extension."""
-    ext_module = importlib.import_module(ext.module_name)
+    
+    ext_module = import_extension_module(ext)
 
     ext_route = getattr(ext_module, f"{ext.code}_ext")
 
