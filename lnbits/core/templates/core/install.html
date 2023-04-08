@@ -112,6 +112,7 @@
               style="font-size: 9px; height: 34px"
             >
               {{ extension.shortDescription }}
+             
             </div>
             {% endraw %}
           </div>
@@ -136,20 +137,26 @@
             class="gt-sm"
             v-model="maxStars"
             disable
-            size="1.5em"
+            size="xs"
             :max="5"
             color="primary"
-          ></q-rating>
+          ><q-tooltip>Ratings coming soon</q-tooltip></q-rating>
           <q-rating
             v-model="maxStars"
+            disable
             class="lt-md"
-            size="1.5em"
+            size="xs"
             :max="5"
             color="primary"
-          ></q-rating
-          ><q-tooltip>Ratings coming soon</q-tooltip>
+          ><q-tooltip>Ratings coming soon</q-tooltip></q-rating
+          >
+          {% raw %}
+          <q-btn v-if="extension.repo" flat round color="primary" :size="xs" icon="link" type="a"
+          :href="extension.repo"></q-btn>
+          {% endraw %}
         </div>
-      </q-card-section>
+       
+  </q-card-section>
       <q-separator v-if="g.user.admin"></q-separator>
       <q-card-actions>
         <div class="col-10">

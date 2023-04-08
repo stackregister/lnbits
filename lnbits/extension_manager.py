@@ -26,6 +26,7 @@ class ExplicitRelease(BaseModel):
     dependencies: List[str] = []
     icon: Optional[str]
     short_description: Optional[str]
+    repo: Optional[str]
     html_url: Optional[str]
     details: Optional[str]
     info_notification: Optional[str]
@@ -148,6 +149,7 @@ class Extension(NamedTuple):
     is_admin_only: bool
     name: Optional[str] = None
     short_description: Optional[str] = None
+    repo: Optional[str] = None
     tile: Optional[str] = None
     contributors: Optional[List[str]] = None
     hidden: bool = False
@@ -206,6 +208,7 @@ class ExtensionManager:
                     is_admin_only,
                     config.get("name"),
                     config.get("short_description"),
+                    config.get("repo"),
                     config.get("tile"),
                     config.get("contributors"),
                     config.get("hidden") or False,
@@ -261,6 +264,7 @@ class InstallableExtension(BaseModel):
     id: str
     name: str
     short_description: Optional[str] = None
+    repo: Optional[str] = None
     icon: Optional[str] = None
     dependencies: List[str] = []
     is_admin_only: bool = False
@@ -354,6 +358,7 @@ class InstallableExtension(BaseModel):
 
             self.name = config_json.get("name")
             self.short_description = config_json.get("short_description")
+            self.repo = config_json.get("repo")
 
             if (
                 self.installed_release
@@ -415,6 +420,7 @@ class InstallableExtension(BaseModel):
                 id=github_release.id,
                 name=config.name,
                 short_description=config.short_description,
+                repo=config.repo,
                 stars=int(repo.stargazers_count),
                 icon=icon_to_github_url(
                     f"{github_release.organisation}/{github_release.repository}",
@@ -435,6 +441,7 @@ class InstallableExtension(BaseModel):
             name=e.name,
             archive=e.archive,
             short_description=e.short_description,
+            repo=e.repo,
             icon=e.icon,
             dependencies=e.dependencies,
         )
@@ -495,6 +502,7 @@ class InstallableExtension(BaseModel):
                                 hash=e.hash,
                                 source_repo=url,
                                 description=e.short_description,
+                                repo=e.repo,
                                 details_html=e.details,
                                 html_url=e.html_url,
                                 icon=e.icon,

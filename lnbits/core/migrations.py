@@ -300,3 +300,14 @@ async def m010_create_installed_extensions_table(db):
         );
     """
     )
+
+
+async def m011_add_repo_to_installed_extensions(db):
+    """
+    Add repo to installed_extensions table
+    """
+    await db.execute(
+        """
+        ALTER TABLE installed_extensions ADD repo TEXT NULL;
+    """
+    )

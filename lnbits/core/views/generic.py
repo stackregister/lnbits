@@ -102,6 +102,7 @@ async def extensions_install(
                 # use the installed extension values
                 e.name = installed_ext.name
                 e.short_description = installed_ext.short_description
+                e.repo = installed_ext.repo
                 e.icon = installed_ext.icon
 
     except Exception as ex:
@@ -132,6 +133,7 @@ async def extensions_install(
                     "name": ext.name,
                     "icon": ext.icon,
                     "shortDescription": ext.short_description,
+                    "repo": ext.repo,
                     "stars": ext.stars,
                     "isFeatured": ext.featured,
                     "dependencies": ext.dependencies,
