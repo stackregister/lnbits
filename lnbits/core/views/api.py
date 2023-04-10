@@ -740,7 +740,7 @@ async def api_install_extension(
     data: CreateExtension, user: User = Depends(check_admin)
 ):
     release = await InstallableExtension.get_extension_release(
-        data.ext_id, data.source_repo, data.archive
+        data.ext_id, data.source_repo, data.archive, data.repo
     )
     if not release:
         raise HTTPException(
@@ -748,7 +748,7 @@ async def api_install_extension(
         )
 
     ext_info = InstallableExtension(
-        id=data.ext_id, name=data.ext_id, installed_release=release, icon=release.icon
+        id=data.ext_id, name=data.ext_id, installed_release=release, icon=release.icon, repo=release.repo
     )
 
     ext_info.download_archive()
