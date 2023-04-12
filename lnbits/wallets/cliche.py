@@ -34,18 +34,16 @@ class ClicheWallet(Wallet):
         command = {"id": self.next_id, "method": method}
         if params is not None:
             command["params"] = params
-        
+
         self.ws.send(json.dumps(command))
         future = Future()
         self.futures[self.next_id] = future
         data = await future
         return data
 
-        
-
     async def status(self) -> StatusResponse:
-        r = await self.send_command(method = "get-info")
-                
+        r = await self.send_command(method="get-info")
+
         try:
             data = json.loads(r)
         except:
@@ -72,10 +70,19 @@ class ClicheWallet(Wallet):
                 else None
             )
 
-            r = await self.send_command(method = "create-invoice", params = {"msatoshi":amount*1000,"description_hash":description_hash_str})
+            r = await self.send_command(
+                method="create-invoice",
+                params={
+                    "msatoshi": amount * 1000,
+                    "description_hash": description_hash_str,
+                },
+            )
         else:
-            
-            r = await self.send_command(method = "create-invoice", params = {"msatoshi":amount*1000,"description":memo})
+
+            r = await self.send_command(
+                method="create-invoice",
+                params={"msatoshi": amount * 1000, "description": memo},
+            )
 
         data = json.loads(r)
         checking_id = None
@@ -98,7 +105,7 @@ class ClicheWallet(Wallet):
         return InvoiceResponse(True, checking_id, payment_request, error_message)
 
     async def pay_invoice(self, bolt11: str, fee_limit_msat: int) -> PaymentResponse:
-        
+
         checking_id, fee_msat, preimage, error_message, payment_ok = (
             None,
             None,
@@ -107,7 +114,9 @@ class ClicheWallet(Wallet):
             None,
         )
         for _ in range(2):
-            r = await self.send_command(method = "pay-invoice", params = {"invoice":bolt11})
+            r = await self.send_command(
+                method="pay-invoice", params={"invoice": bolt11}
+            )
             data = json.loads(r)
             checking_id, fee_msat, preimage, error_message, payment_ok = (
                 None,
@@ -136,7 +145,9 @@ class ClicheWallet(Wallet):
         )
 
     async def get_invoice_status(self, checking_id: str) -> PaymentStatus:
-        r = await self.send_command(method = "check-payment", params = {"hash":checking_id})
+        r = await self.send_command(
+            method="check-payment", params={"hash": checking_id}
+        )
         data = json.loads(r)
 
         if data.get("error") is not None and data["error"].get("message"):
@@ -148,7 +159,9 @@ class ClicheWallet(Wallet):
 
     async def get_payment_status(self, checking_id: str) -> PaymentStatus:
 
-        r = await self.send_command(method = "check-payment", params = {"hash":checking_id})
+        r = await self.send_command(
+            method="check-payment", params={"hash": checking_id}
+        )
         data = json.loads(r)
 
         if data.get("error") is not None and data["error"].get("message"):
@@ -174,15 +187,13 @@ class ClicheWallet(Wallet):
         except Exception as exc:
             logger.exception(f"Error processing message: {exc}")
 
-
-    
     async def paid_invoices_stream(self) -> AsyncGenerator[str, None]:
         while True:
             try:
                 async with connect(self.endpoint) as ws:
                     ws.on_message = self.on_message
                     self.ws = ws
-                    
+
             except Exception as exc:
                 logger.error(
                     f"lost connection to cliche's invoices stream: '{exc}', retrying in 5 seconds"
