@@ -10,6 +10,10 @@ packages = [
   {include = "lnbits"},
   {include = "lnbits/py.typed"},
 ]
+exclude = [
+    "lnbits/extensions"
+]
+
 
 [tool.poetry.build]
 generate-setup-file = false
