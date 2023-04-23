@@ -1,8 +1,17 @@
 {% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {{ window_vars(user, extensions) }}{% block page %}
 <div class="row q-col-gutter-md q-mb-md">
-  <div class="col-sm-9 col-xs-12">
-    <p class="text-h4 gt-sm">{%raw%}{{ $t('extensions') }}{%endraw%}</p>
+  <div class="col-sm-9 gt-sm col-xs-12 mt-lg">
+    <p class="text-h4">
+      {%raw%}{{ $t('extensions') }}{%endraw%}
+      <q-btn
+        flat
+        color="primary"
+        type="a"
+        href="/install"
+        :label="$t('manage_extensions')"
+      ></q-btn>
+    </p>
   </div>
 
   <div class="col-sm-3 col-xs-12 q-ml-auto">
@@ -177,74 +186,29 @@
         </div>
       </q-card-section>
       <q-separator></q-separator>
-      <q-card-actions style="min-height: 52px">
-        <div class="col-10">
-          <div v-if="!extension.inProgress">
-            <q-btn
-              v-if="user.extensions.includes(extension.id) && extension.isActive && extension.isInstalled"
-              flat
-              color="primary"
-              type="a"
-              :href="[extension.id, '?usr=', g.user.id].join('')"
-              >{%raw%}{{ $t('open') }}{%endraw%}</q-btn
-            >
-            <q-btn
-              v-if="user.extensions.includes(extension.id) && extension.isActive && extension.isInstalled"
-              flat
-              color="grey-5"
-              type="a"
-              :href="['{{
-                url_for('install.extensions')
-              }}', '?usr=', g.user.id, '&disable=', extension.id].join('')"
-            >
-              {%raw%}{{ $t('disable') }}{%endraw%}</q-btn
-            >
-            <q-btn
-              v-if="extension.isInstalled && !user.extensions.includes(extension.id) && extension.isActive"
-              flat
-              color="primary"
-              type="a"
-              :href="['{{
-                url_for('install.extensions')
-              }}', '?usr=', g.user.id, '&enable=', extension.id].join('')"
-            >
-              {%raw%}{{ $t('enable') }}{%endraw%}
-              <q-tooltip>
-                <span v-text="$t('enable_extension_details')">
-                </span> </q-tooltip
-            ></q-btn>
-
-            <q-btn
-              @click="showUpgrade(extension)"
-              flat
-              color="primary"
-              v-if="g.user.admin"
-            >
-              {%raw%}{{ $t('manage') }}{%endraw%}<q-tooltip
-                >{%raw%}{{ $t('manage_extension_details')
-                }}{%endraw%}</q-tooltip
-              ></q-btn
-            >
-          </div>
-          <div v-else>
-            <q-spinner color="primary" size="2.55em"></q-spinner>
-          </div>
-        </div>
-
-        <div class="col-2">
-          <div
-            v-if="extension.isInstalled && extension.installedRelease"
-            class="float-right"
+      <q-card-actions>
+        <div v-if="extension.isEnabled">
+          <q-btn flat color="primary" type="a" :href="extension.url"
+            >Open</q-btn
           >
-            <q-badge>
-              {% raw %}{{ extension.installedRelease.version }}{% endraw
-              %}<q-tooltip
-                >{%raw%}{{ $t('extension_installed_version')
-                }}{%endraw%}</q-tooltip
-              >
-            </q-badge>
-          </div>
+          <q-btn
+            flat
+            color="grey-5"
+            type="a"
+            :href="['{{ url_for('core.extensions') }}', '?disable=', extension.code].join('')"
+          >
+            Disable</q-btn
+          >
         </div>
+        <q-btn
+          v-else
+          flat
+          color="primary"
+          type="a"
+          :href="['{{ url_for('core.extensions') }}', '?enable=', extension.code].join('')"
+        >
+          Enable</q-btn
+        >
       </q-card-actions>
     </q-card>
   </div>

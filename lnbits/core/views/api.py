@@ -74,7 +74,9 @@ from ..crud import (
     get_total_balance,
     get_wallet_for_key,
     save_balance_check,
+    create_wallet,
     update_wallet,
+    delete_wallet,
 )
 from ..services import (
     InvoiceFailure,
@@ -106,16 +108,38 @@ async def api_wallet(wallet: WalletTypeInfo = Depends(get_key_type)):
         return {"name": wallet.wallet.name, "balance": wallet.wallet.balance_msat}
 
 
-@core_app.put("/api/v1/wallet/{new_name}")
+@core_app.post("/api/v1/wallet")
+async def api_create_wallet(name: str = Query(...), user: User = Depends(require_admin_key)):
+    wallet = await create_wallet(user_id=user.id, wallet_name=name)
+    logger.debug(f"Created wallet {wallet.id} of user {user.id}")
+    return wallet
+
+
+@core_app.put("/api/v1/wallet/{wallet_id}")
 async def api_update_wallet(
-    new_name: str, wallet: WalletTypeInfo = Depends(require_admin_key)
+        wallet_id: str, new_name: str = Body(...), user: User = Depends(require_admin_key)
 ):
-    await update_wallet(wallet.wallet.id, new_name)
+    user_wallet_ids = [u.id for u in user.wallets]
+    if wallet_id not in user_wallet_ids:
+        raise HTTPException(HTTPStatus.FORBIDDEN, "Not your wallet.")
+    wallet = await update_wallet(wallet_id, new_name)
+    logger.debug(f"Update wallet {wallet.id} of user {user.id}")
     return {
-        "id": wallet.wallet.id,
-        "name": wallet.wallet.name,
-        "balance": wallet.wallet.balance_msat,
+        "id": wallet.id,
+        "name": wallet.name,
+        "balance": wallet.balance_msat,
     }
+
+
+@core_app.delete("/api/v1/wallet/{wallet_id}")
+async def api_delete_wallet(wallet_id: str, user: User = Depends(require_admin_key)):
+    user_wallet_ids = [u.id for u in user.wallets]
+    if wallet_id not in user_wallet_ids:
+        raise HTTPException(HTTPStatus.FORBIDDEN, "Not your wallet.")
+    else:
+        await delete_wallet(user_id=user.id, wallet_id=wallet_id)
+        user_wallet_ids.remove(wallet_id)
+        logger.debug(f"Deleted wallet {wallet_id} of user {user.id}")
 
 
 @core_app.get(

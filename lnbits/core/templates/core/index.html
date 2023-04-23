@@ -3,9 +3,9 @@
 {% endblock %} {% block page %}
 <div class="row q-col-gutter-md justify-center">
   <div class="col-12 col-md-7 col-lg-6 q-gutter-y-md">
+    {% if lnurl %}
     <q-card>
       <q-card-section>
-        {% if lnurl %}
         <q-btn
           unelevated
           color="primary"
@@ -14,26 +14,58 @@
           href="{{ url_for('core.lnurlwallet') }}?lightning={{ lnurl }}"
           v-text="$t('press_to_claim')"
         ></q-btn>
-        {% else %}
-        <q-form @submit="createWallet" class="q-gutter-md">
+      </q-card-section>
+    </q-card>
+    {% endif %}
+    <q-card>
+      <q-card-section>
+        <q-form @submit="login" class="q-gutter-md">
+          <q-input filled dense v-model="username" label="Username"></q-input>
           <q-input
             filled
             dense
-            v-model="walletName"
-            :label='$t("name_your_wallet", { name: "{{ SITE_TITLE }} *" })'
+            v-model="password"
+            label="Password"
+            type="password"
           ></q-input>
           <q-btn
             unelevated
             color="primary"
-            :disable="walletName == ''"
+            :disable="password == '' || username == ''"
             type="submit"
-            :label="$t('add_wallet')"
+            label="Login"
           ></q-btn>
         </q-form>
-        {% endif %}
       </q-card-section>
     </q-card>
-
+    <q-card>
+      <q-card-section>
+        <q-form @submit="register" class="q-gutter-md">
+          <q-input filled dense v-model="username" label="Username"></q-input>
+          <q-input
+            filled
+            dense
+            v-model="password"
+            label="Password"
+            type="password"
+          ></q-input>
+          <q-input
+            filled
+            dense
+            v-model="password_repeat"
+            label="Password repeat"
+            type="password"
+          ></q-input>
+          <q-btn
+            unelevated
+            color="primary"
+            :disable="password == '' || password_repeat == '' || username == '' || password != password_repeat"
+            type="submit"
+            label="Create Account"
+          ></q-btn>
+        </q-form>
+      </q-card-section>
+    </q-card>
     <q-card>
       <q-card-section>
         <h3 class="q-my-none">{{SITE_TITLE}}</h3>

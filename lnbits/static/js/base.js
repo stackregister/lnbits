@@ -119,15 +119,34 @@ window.LNbits = {
     }
   },
   href: {
-    createWallet: function (walletName, userId) {
-      window.location.href =
-        '/wallet?' + (userId ? 'usr=' + userId + '&' : '') + 'nme=' + walletName
+    createWallet: function (walletName) {
+      axios({
+        method: 'POST',
+        url: '/api/v1/wallet',
+        data: {name: walletName}
+      }).then(function (data) {
+        console.log(data)
+        // window.location.href = `/wallet?wal=${data.id}`
+      })
     },
-    updateWallet: function (walletName, userId, walletId) {
-      window.location.href = `/wallet?usr=${userId}&wal=${walletId}&nme=${walletName}`
+    updateWallet: function (walletName, walletId) {
+      axios({
+        method: 'PUT',
+        url: '/api/v1/wallet/' + walletId,
+        data: {new_name: walletName}
+      }).then(function (data) {
+        console.log(data)
+        // window.location.href = `/wallet?wal=${data.id}`
+      })
     },
-    deleteWallet: function (walletId, userId) {
-      window.location.href = '/deletewallet?usr=' + userId + '&wal=' + walletId
+    deleteWallet: function (walletId) {
+      axios({
+        method: 'DELETE',
+        url: '/api/v1/wallet/' + walletId
+      }).then(function () {
+        console.log(data)
+        // window.location.href = `/wallet`
+      })
     }
   },
   map: {
@@ -185,7 +204,7 @@ window.LNbits = {
       newWallet.fsat = new Intl.NumberFormat(window.LOCALE).format(
         newWallet.sat
       )
-      newWallet.url = ['/wallet?usr=', data.user, '&wal=', data.id].join('')
+      newWallet.url = `/wallet?&wal=${data.id}`
       return newWallet
     },
     payment: function (data) {
@@ -350,6 +369,30 @@ window.windowMixin = {
   },
 
   methods: {
+    login: function (usr) {
+      let that = this
+      axios({
+        method: 'POST',
+        url: '/api/v1/login',
+        data: {usr: usr, username: 'unknown', password: 'unknown'}
+      }).then(function (data) {
+        that.$q.localStorage.set('lnbits.token', data.token)
+        that.$q.cookies.set('access-token', data.token, {
+          path: '/',
+          sameSite: 'Lax'
+        })
+      })
+    },
+    logout: function () {
+      let that = this
+      axios({
+        method: 'POST',
+        url: '/api/v1/logout'
+      }).then(function () {
+        that.$q.localStorage.set('lnbits.token', null)
+        window.location = '/'
+      })
+    },
     activeLanguage: function (lang) {
       return window.i18n.locale === lang
     },
@@ -376,6 +419,15 @@ window.windowMixin = {
     }
   },
   created: function () {
+    // crop usr from url and login that user in the background
+    if (window.location.href.search('usr=') !== -1) {
+      // get usr from params
+      let usr = window.location.href.split('usr=')[1].split('&')[0]
+      this.login(usr)
+      // replace all query params in current url
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     if (
       this.$q.localStorage.getItem('lnbits.darkMode') == true ||
       this.$q.localStorage.getItem('lnbits.darkMode') == false

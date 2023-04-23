@@ -30,7 +30,7 @@ from .core import (
     core_app_extra,
     update_installed_extension_state,
 )
-from .core.services import check_admin_settings
+from .core.services import check_admin_settings, login_manager
 from .core.views.generic import core_html_routes
 from .extension_manager import Extension, InstallableExtension, get_valid_extensions
 from .helpers import template_renderer
@@ -58,6 +58,8 @@ def create_app() -> FastAPI:
             "url": "https://raw.githubusercontent.com/lnbits/lnbits/main/LICENSE",
         },
     )
+
+    login_manager.useRequest(app)
 
     app.mount("/static", StaticFiles(packages=[("lnbits", "static")]), name="static")
     app.mount(

@@ -15,6 +15,28 @@ from lnbits.requestvars import g
 from lnbits.settings import settings
 
 
+def is_user(request: Request):
+    user = request.state.user
+    if user is None:
+        raise HTTPException(401)
+    return user
+
+
+def is_admin(request: Request):
+    user = is_user(request)
+    if not user.is_admin and not user.super_user:
+        raise HTTPException(401)
+
+    return user
+
+
+def is_super_user(request: Request):
+    user = is_user(request)
+    if not user.super_user:
+        raise HTTPException(401)
+    return user
+
+
 # TODO: fix type ignores
 class KeyChecker(SecurityBase):
     def __init__(
@@ -231,8 +253,21 @@ async def require_invoice_key(
         return wallet
 
 
-async def check_user_exists(usr: UUID4) -> User:
-    g().user = await get_user(usr.hex)
+async def check_user_exists(req: Request, usr: Optional[str] = None) -> User:
+
+    if req.state.user:
+        user = await get_user(req.state.user.id)
+        assert user, "Logged in user has to exist."
+        g().user = user
+        return user
+
+    if not usr:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Not logged in or provided ?usr argument.",
+        )
+
+    g().user = await get_user(usr)
 
     if not g().user:
         raise HTTPException(
@@ -252,8 +287,8 @@ async def check_user_exists(usr: UUID4) -> User:
     return g().user
 
 
-async def check_admin(usr: UUID4) -> User:
-    user = await check_user_exists(usr)
+async def check_admin(req: Request, usr: Optional[str] = None) -> User:
+    user = await check_user_exists(req, usr)
     if user.id != settings.super_user and user.id not in settings.lnbits_admin_users:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
@@ -267,8 +302,8 @@ async def check_admin(usr: UUID4) -> User:
     return user
 
 
-async def check_super_user(usr: UUID4) -> User:
-    user = await check_admin(usr)
+async def check_super_user(req: Request, usr: Optional[str] = None) -> User:
+    user = await check_admin(req, usr)
     if user.id != settings.super_user:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,

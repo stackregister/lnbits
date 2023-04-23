@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 import shortuuid
+from bcrypt import gensalt, hashpw
 
 from lnbits import bolt11
 from lnbits.db import Connection, Filters, Page
@@ -12,21 +13,47 @@ from lnbits.extension_manager import InstallableExtension
 from lnbits.settings import AdminSettings, EditableSettings, SuperSettings, settings
 
 from . import db
-from .models import BalanceCheck, Payment, PaymentFilters, TinyURL, User, Wallet
+from .models import BalanceCheck, Payment, PaymentFilters, TinyURL, User, Wallet, createUser
 
 # accounts
 # --------
 
 
-async def create_account(
-    conn: Optional[Connection] = None, user_id: Optional[str] = None
-) -> User:
-    if user_id:
-        user_uuid4 = UUID(hex=user_id, version=4)
-        assert user_uuid4.hex == user_id, "User ID is not valid UUID4 hex string"
-    else:
-        user_id = uuid4().hex
+async def create_user(data: createUser) -> User:
 
+    if await get_account_by_email(data.email):
+        raise Exception("user exists")
+
+    pwd_bytes = data.password.encode("utf-8")
+    salt = gensalt()
+    password = hashpw(pwd_bytes, salt)
+
+    user_id = uuid4().hex
+    await db.execute(
+        "INSERT INTO accounts (id, email, pass) VALUES (?, ?, ?)",
+        (
+            user_id,
+            data.email,
+            password,
+        ),
+    )
+    new_account = await get_account(user_id=user_id)
+    assert new_account, "Newly created account couldn't be retrieved"
+    return new_account
+
+
+async def get_account_by_email(
+    email: str, conn: Optional[Connection] = None
+) -> Optional[User]:
+    row = await (conn or db).fetchone(
+        "SELECT id, email, pass as password FROM accounts WHERE email = ?", (email,)
+    )
+
+    return User(**row) if row else None
+
+
+async def create_account(conn: Optional[Connection] = None) -> User:
+    user_id = uuid4().hex
     await (conn or db).execute("INSERT INTO accounts (id) VALUES (?)", (user_id,))
 
     new_account = await get_account(user_id=user_id, conn=conn)
@@ -214,7 +241,7 @@ async def create_wallet(
 
 async def update_wallet(
     wallet_id: str, new_name: str, conn: Optional[Connection] = None
-) -> Optional[Wallet]:
+) -> Wallet:
     await (conn or db).execute(
         """
         UPDATE wallets SET
