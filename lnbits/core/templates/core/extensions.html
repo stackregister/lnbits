@@ -1,17 +1,8 @@
 {% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {{ window_vars(user, extensions) }}{% block page %}
 <div class="row q-col-gutter-md q-mb-md">
-  <div class="col-sm-9 gt-sm col-xs-12 mt-lg">
-    <p class="text-h4">
-      {%raw%}{{ $t('extensions') }}{%endraw%}
-      <q-btn
-        flat
-        color="primary"
-        type="a"
-        href="/install"
-        :label="$t('manage_extensions')"
-      ></q-btn>
-    </p>
+  <div class="col-sm-9 col-xs-12">
+    <p class="text-h4 gt-sm">{%raw%}{{ $t('extensions') }}{%endraw%}</p>
   </div>
 
   <div class="col-sm-3 col-xs-12 q-ml-auto">
@@ -186,29 +177,70 @@
         </div>
       </q-card-section>
       <q-separator></q-separator>
-      <q-card-actions>
-        <div v-if="extension.isEnabled">
-          <q-btn flat color="primary" type="a" :href="extension.url"
-            >Open</q-btn
-          >
-          <q-btn
-            flat
-            color="grey-5"
-            type="a"
-            :href="['{{ url_for('core.extensions') }}', '?disable=', extension.code].join('')"
-          >
-            Disable</q-btn
-          >
+      <q-card-actions style="min-height: 52px">
+        <div class="col-10">
+          <div v-if="!extension.inProgress">
+            <q-btn
+              v-if="user.extensions.includes(extension.id) && extension.isActive && extension.isInstalled"
+              flat
+              color="primary"
+              type="a"
+              :href="extension.id"
+              >{%raw%}{{ $t('open') }}{%endraw%}</q-btn
+            >
+            <q-btn
+              v-if="user.extensions.includes(extension.id) && extension.isActive && extension.isInstalled"
+              flat
+              color="grey-5"
+              type="a"
+              :href="['{{ url_for('install.extensions') }}', '?disable=', extension.id].join('')"
+            >
+              {%raw%}{{ $t('disable') }}{%endraw%}</q-btn
+            >
+            <q-btn
+              v-if="extension.isInstalled && !user.extensions.includes(extension.id) && extension.isActive"
+              flat
+              color="primary"
+              type="a"
+              :href="['{{ url_for('install.extensions') }}', '?enable=', extension.id].join('')"
+            >
+              {%raw%}{{ $t('enable') }}{%endraw%}
+              <q-tooltip>
+                <span v-text="$t('enable_extension_details')">
+                </span> </q-tooltip
+            ></q-btn>
+
+            <q-btn
+              @click="showUpgrade(extension)"
+              flat
+              color="primary"
+              v-if="g.user.admin"
+            >
+              {%raw%}{{ $t('manage') }}{%endraw%}<q-tooltip
+                >{%raw%}{{ $t('manage_extension_details')
+                }}{%endraw%}</q-tooltip
+              ></q-btn
+            >
+          </div>
+          <div v-else>
+            <q-spinner color="primary" size="2.55em"></q-spinner>
+          </div>
         </div>
-        <q-btn
-          v-else
-          flat
-          color="primary"
-          type="a"
-          :href="['{{ url_for('core.extensions') }}', '?enable=', extension.code].join('')"
-        >
-          Enable</q-btn
-        >
+
+        <div class="col-2">
+          <div
+            v-if="extension.isInstalled && extension.installedRelease"
+            class="float-right"
+          >
+            <q-badge>
+              {% raw %}{{ extension.installedRelease.version }}{% endraw
+              %}<q-tooltip
+                >{%raw%}{{ $t('extension_installed_version')
+                }}{%endraw%}</q-tooltip
+              >
+            </q-badge>
+          </div>
+        </div>
       </q-card-actions>
     </q-card>
   </div>
@@ -420,7 +452,7 @@
         LNbits.api
           .request(
             'POST',
-            `/api/v1/extension?usr=${this.g.user.id}`,
+            `/api/v1/extension`,
             this.g.user.wallets[0].adminkey,
             {
               ext_id: extension.id,
@@ -451,7 +483,7 @@
         LNbits.api
           .request(
             'DELETE',
-            `/api/v1/extension/${extension.id}?usr=${this.g.user.id}`,
+            `/api/v1/extension/${extension.id}`,
             this.g.user.wallets[0].adminkey
           )
           .then(response => {
@@ -473,9 +505,8 @@
         LNbits.api
           .request(
             'GET',
-            "{{ url_for('install.extensions') }}?usr=" +
-              this.g.user.id +
-              '&' +
+            "{{ url_for('install.extensions') }}" +
+              '?' +
               action +
               '=' +
               extension.id
@@ -499,7 +530,7 @@
         try {
           const {data} = await LNbits.api.request(
             'GET',
-            `/api/v1/extension/${extension.id}/releases?usr=${this.g.user.id}`,
+            `/api/v1/extension/${extension.id}/releases`,
             this.g.user.wallets[0].adminkey
           )
 
@@ -563,7 +594,7 @@
         try {
           const {data} = await LNbits.api.request(
             'GET',
-            `/api/v1/extension/release/${org}/${repo}/${release.version}?usr=${this.g.user.id}`,
+            `/api/v1/extension/release/${org}/${repo}/${release.version}`,
             this.g.user.wallets[0].adminkey
           )
           release.loaded = true

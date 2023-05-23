@@ -7,7 +7,6 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.routing import APIRouter
 from loguru import logger
-from pydantic.types import UUID4
 from starlette.responses import HTMLResponse, JSONResponse
 
 from lnbits.core import db
@@ -21,7 +20,6 @@ from ...extension_manager import InstallableExtension, get_valid_extensions
 from ..crud import (
     create_account,
     create_wallet,
-    delete_wallet,
     get_balance_check,
     get_inactive_extensions,
     get_installed_extensions,
@@ -68,7 +66,6 @@ async def extensions_install(
     disable: str = Query(None),
 ):
     await toggle_extension(enable, disable, user.id)
-
     # Update user as his extensions have been updated
     if enable or disable:
         user = await get_user(user.id)  # type: ignore
@@ -159,7 +156,9 @@ Args:
 nothing: create new wallet and redirect<br>
 """,
 )
-async def wallet(request: Request, user: User = Depends(check_user_exists), wal: Optional[str] = None):
+async def wallet(
+    request: Request, user: User = Depends(check_user_exists), wal: Optional[str] = None
+):
 
     user_id = user.id
 

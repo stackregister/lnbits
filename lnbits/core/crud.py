@@ -2,7 +2,7 @@ import datetime
 import json
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import shortuuid
 from bcrypt import gensalt, hashpw
@@ -13,7 +13,15 @@ from lnbits.extension_manager import InstallableExtension
 from lnbits.settings import AdminSettings, EditableSettings, SuperSettings, settings
 
 from . import db
-from .models import BalanceCheck, Payment, PaymentFilters, TinyURL, User, Wallet, createUser
+from .models import (
+    BalanceCheck,
+    Payment,
+    PaymentFilters,
+    TinyURL,
+    User,
+    Wallet,
+    createUser,
+)
 
 # accounts
 # --------
