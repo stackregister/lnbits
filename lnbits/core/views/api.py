@@ -63,8 +63,10 @@ from .. import core_app, core_app_extra, db
 from ..crud import (
     add_installed_extension,
     create_tinyurl,
+    create_wallet,
     delete_installed_extension,
     delete_tinyurl,
+    delete_wallet,
     get_dbversions,
     get_payments,
     get_payments_paginated,
@@ -74,9 +76,7 @@ from ..crud import (
     get_total_balance,
     get_wallet_for_key,
     save_balance_check,
-    create_wallet,
     update_wallet,
-    delete_wallet,
 )
 from ..services import (
     InvoiceFailure,
@@ -108,21 +108,27 @@ async def api_wallet(wallet: WalletTypeInfo = Depends(get_key_type)):
         return {"name": wallet.wallet.name, "balance": wallet.wallet.balance_msat}
 
 
+class WalletName(BaseModel):
+    name: str = Query(...)
+
+
 @core_app.post("/api/v1/wallet")
-async def api_create_wallet(name: str = Query(...), user: User = Depends(require_admin_key)):
-    wallet = await create_wallet(user_id=user.id, wallet_name=name)
+async def api_create_wallet(
+    wallet_name: WalletName, user: User = Depends(require_admin_key)
+):
+    wallet = await create_wallet(user_id=user.id, wallet_name=wallet_name.name)
     logger.debug(f"Created wallet {wallet.id} of user {user.id}")
     return wallet
 
 
 @core_app.put("/api/v1/wallet/{wallet_id}")
 async def api_update_wallet(
-        wallet_id: str, new_name: str = Body(...), user: User = Depends(require_admin_key)
+    wallet_id: str, wallet_name: WalletName, user: User = Depends(require_admin_key)
 ):
     user_wallet_ids = [u.id for u in user.wallets]
     if wallet_id not in user_wallet_ids:
         raise HTTPException(HTTPStatus.FORBIDDEN, "Not your wallet.")
-    wallet = await update_wallet(wallet_id, new_name)
+    wallet = await update_wallet(wallet_id, wallet_name.name)
     logger.debug(f"Update wallet {wallet.id} of user {user.id}")
     return {
         "id": wallet.id,

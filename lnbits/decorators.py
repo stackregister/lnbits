@@ -6,13 +6,14 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security import APIKeyHeader, APIKeyQuery
 from fastapi.security.base import SecurityBase
-from pydantic.types import UUID4
 
 from lnbits.core.crud import get_user, get_wallet_for_key
 from lnbits.core.models import User, Wallet
 from lnbits.db import Filter, Filters, TFilterModel
 from lnbits.requestvars import g
 from lnbits.settings import settings
+
+# from pydantic.types import UUID4
 
 
 def is_user(request: Request):
@@ -207,6 +208,13 @@ async def require_admin_key(
     api_key_header: str = Security(api_key_header),
     api_key_query: str = Security(api_key_query),
 ):
+
+    if r.state.user:
+        user = await get_user(r.state.user.id)
+        assert user, "Logged in user has to exist."
+        g().user = user
+        return user
+
     token = api_key_header or api_key_query
 
     if not token:

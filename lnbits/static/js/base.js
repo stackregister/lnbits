@@ -124,19 +124,17 @@ window.LNbits = {
         method: 'POST',
         url: '/api/v1/wallet',
         data: {name: walletName}
-      }).then(function (data) {
-        console.log(data)
-        // window.location.href = `/wallet?wal=${data.id}`
+      }).then(function (res) {
+        window.location.href = `/wallet?wal=${res.data.id}`
       })
     },
     updateWallet: function (walletName, walletId) {
       axios({
         method: 'PUT',
         url: '/api/v1/wallet/' + walletId,
-        data: {new_name: walletName}
-      }).then(function (data) {
-        console.log(data)
-        // window.location.href = `/wallet?wal=${data.id}`
+        data: {name: walletName}
+      }).then(function (res) {
+        window.location.href = `/wallet?wal=${res.data.id}`
       })
     },
     deleteWallet: function (walletId) {
@@ -144,8 +142,7 @@ window.LNbits = {
         method: 'DELETE',
         url: '/api/v1/wallet/' + walletId
       }).then(function () {
-        console.log(data)
-        // window.location.href = `/wallet`
+        window.location.href = `/wallet`
       })
     }
   },
