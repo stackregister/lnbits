@@ -240,6 +240,13 @@ async def require_invoice_key(
     api_key_header: str = Security(api_key_header),
     api_key_query: str = Security(api_key_query),
 ):
+
+    if r.state.user:
+        user = await get_user(r.state.user.id)
+        assert user, "Logged in user has to exist."
+        g().user = user
+        return user
+
     token = api_key_header or api_key_query
 
     if not token:
