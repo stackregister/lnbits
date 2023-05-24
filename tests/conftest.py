@@ -1,11 +1,14 @@
 import asyncio
+import os
 
 import pytest_asyncio
 from httpx import AsyncClient
 
 from lnbits.app import create_app
 from lnbits.commands import migrate_databases
-from lnbits.core.crud import create_account, create_wallet
+from lnbits.core.crud import create_account, create_user, create_wallet
+from lnbits.core.models import createUser
+from lnbits.core.services import login_manager
 from lnbits.core.views.api import CreateInvoiceData, api_payments_create_invoice
 from lnbits.db import Database
 from lnbits.settings import settings
@@ -35,7 +38,31 @@ def app(event_loop):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def client(app):
+async def from_user_account():
+    user = await create_user(
+        createUser(
+            email=os.urandom(24).hex(), password="password", password_repeat="password"
+        )
+    )
+    yield user
+
+
+@pytest_asyncio.fixture(scope="session")
+async def client(app, from_user_account):
+    access_token = login_manager.create_access_token(
+        data=dict(sub=from_user_account.id)
+    )
+    client = AsyncClient(
+        app=app,
+        headers={"access_token": access_token},
+        base_url=f"http://{settings.host}:{settings.port}",
+    )
+    yield client
+    await client.aclose()
+
+
+@pytest_asyncio.fixture(scope="session")
+async def public_client(app):
     client = AsyncClient(app=app, base_url=f"http://{settings.host}:{settings.port}")
     yield client
     await client.aclose()
