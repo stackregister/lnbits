@@ -238,6 +238,9 @@ class EnvSettings(LNbitsSettings):
     lnbits_commit: str = Field(default="unknown")
     super_user: str = Field(default="")
     version: str = Field(default="0.0.0")
+    login_secret: str = Field(
+        default="xxxxx33497535c9d8f344cd5e0d85df82d7ccd6a4dbyyyyy"
+    )
 
 
 class SaaSSettings(LNbitsSettings):

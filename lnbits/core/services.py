@@ -37,7 +37,6 @@ from .crud import (
     delete_wallet_payment,
     get_account,
     get_standalone_payment,
-    get_account_by_email,
     get_super_settings,
     get_wallet,
     get_wallet_payment,
@@ -48,9 +47,9 @@ from .crud import (
 from .helpers import to_valid_user_id
 from .models import Payment
 
-# import os; print(os.urandom(24).hex())
-login_secret = "c5d9f33497535c9d8f344cd5e0d85df82d7ccd6a4db6ec84"
-login_manager = LoginManager(login_secret, token_url="/api/v1/login", use_cookie=True)
+login_manager = LoginManager(
+    settings.login_secret, token_url="/api/v1/login", use_cookie=True
+)
 
 
 @login_manager.user_loader()  # type: ignore
