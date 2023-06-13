@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import Body, Depends, Response, status
 from fastapi.responses import JSONResponse
@@ -50,7 +50,7 @@ async def logout(response: Response):
 @core_app.post("/api/v1/register")
 async def register_endpoint(
     data: createUser, response: Response
-) -> dict[str, str] | Response:
+) -> Union[dict[str, str], Response]:
     if data.password != data.password_repeat:
         return JSONResponse(
             {
