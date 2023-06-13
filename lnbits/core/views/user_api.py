@@ -2,10 +2,9 @@ from typing import Optional
 
 from fastapi import Body, Depends, Response, status
 from fastapi.responses import JSONResponse
-from loguru import logger
 
 from .. import core_app
-from ..crud import create_user, get_user, get_account_by_email
+from ..crud import create_user, get_account_by_email, get_user
 from ..models import createUser
 from ..services import load_user, login_manager
 
@@ -37,8 +36,6 @@ async def login_endpoint(
             user.login(password)
         except Exception as exc:
             return Response(status_code=status.HTTP_401_UNAUTHORIZED, content=str(exc))
-
-
     access_token = login_manager.create_access_token(data=dict(sub=user.id))
     login_manager.set_cookie(response, access_token)
     return {"access_token": access_token, "token_type": "bearer"}
