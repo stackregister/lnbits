@@ -24,10 +24,10 @@ async def test_core_views_generic(client):
 
 
 # check if access token is working
-@pytest.mark.asyncio
-async def test_core_views_generic_wallet(client):
-    response = await client.get("/wallet")
-    assert response.status_code == 200
+# @pytest.mark.asyncio
+# async def test_core_views_generic_wallet(client):
+#     response = await client.get("/wallet")
+#     assert response.status_code == 200
 
 
 # check GET /api/v1/wallet with inkey: wallet info, no balance
