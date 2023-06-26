@@ -211,7 +211,6 @@ class ClicheWallet(Wallet):
                 while True:
                     r = self.ws.recv()
                     data = json.loads(r)
-                    
                     try:
                         if data["result"]["status"]:
                             yield data["result"]["payment_hash"]
