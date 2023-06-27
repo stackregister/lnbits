@@ -205,19 +205,25 @@ def add_ratelimit_middleware(app: FastAPI):
 def add_ip_block_middleware(app: FastAPI):
     @app.middleware("http")
     async def block_allow_ip_middleware(request: Request, call_next):
-        response = await call_next(request)
-        if not request.client:
-            return JSONResponse(
-                status_code=429,
-                content={"detail": "No request client"},
-            )
-        if request.client.host in settings.lnbits_allowed_ips:
+        try:
+            response = await call_next(request)
+            if not request.client:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "No request client"},
+                )
+            if request.client.host in settings.lnbits_allowed_ips:
+                return response
+            if request.client.host in settings.lnbits_blocked_ips:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "IP is blocked"},
+                )
             return response
-        if request.client.host in settings.lnbits_blocked_ips:
+        except:
             return JSONResponse(
                 status_code=429,
-                content={"detail": "IP is blocked"},
+                content={"detail": "No response"},
             )
-        return response
 
     app.middleware("http")(block_allow_ip_middleware)
