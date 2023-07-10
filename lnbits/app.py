@@ -7,6 +7,7 @@ import shutil
 import signal
 import sys
 import traceback
+import time
 from hashlib import sha256
 from http import HTTPStatus
 from typing import Callable, List
@@ -29,6 +30,7 @@ from lnbits.core.tasks import (  # register_watchdog,; unregister_watchdog,
     register_task_listeners,
     unregister_killswitch,
 )
+
 from lnbits.settings import settings
 from lnbits.wallets import get_wallet_class, set_wallet_class
 
@@ -358,7 +360,6 @@ def initialize_server_logger():
         lambda msg: serverlog_queue.put_nowait(msg),
         format=Formatter().format,
     )
-
 
 def log_server_info():
     logger.info("Starting LNbits")

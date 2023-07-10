@@ -1,7 +1,6 @@
 import asyncio
-from typing import Callable, List, NamedTuple
-
 import httpx
+from typing import Callable, List, NamedTuple
 from loguru import logger
 
 currencies = {
