@@ -179,26 +179,30 @@ async def wallet(
     wallet_id = wal.hex if wal else None
     wallet_name = nme
 
+    def error_msg(request, err_msg):
+        return template_renderer().TemplateResponse(
+            "error.html", {"request": request, "err": err_msg}
+        )
+
     if not user_id:
         new_user = await create_account()
+        if not new_user:
+            return error_msg(request, "Could not create user.")
         user = await get_user(new_user.id)
         assert user, "Newly created user has to exist."
         logger.info(f"Create user {user.id}")
     else:
         user = await get_user(user_id)
         if not user:
-            return template_renderer().TemplateResponse(
-                "error.html", {"request": request, "err": "User does not exist."}
-            )
+            return error_msg(request, "User does not exist.")
         if (
             len(settings.lnbits_allowed_users) > 0
             and user_id not in settings.lnbits_allowed_users
             and user_id not in settings.lnbits_admin_users
             and user_id != settings.super_user
         ):
-            return template_renderer().TemplateResponse(
-                "error.html", {"request": request, "err": "User not authorized."}
-            )
+            return error_msg(request, "User not authorized.")
+
         if user_id == settings.super_user or user_id in settings.lnbits_admin_users:
             user.admin = True
         if user_id == settings.super_user:
@@ -223,9 +227,7 @@ async def wallet(
     )
     userwallet = user.get_wallet(wallet_id)
     if not userwallet:
-        return template_renderer().TemplateResponse(
-            "error.html", {"request": request, "err": "Wallet not found"}
-        )
+        return error_msg(request, "Wallet not found.")
 
     return template_renderer().TemplateResponse(
         "core/wallet.html",
