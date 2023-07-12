@@ -187,7 +187,7 @@ async def wallet(
     if not user_id:
         new_user = await create_account()
         if not new_user:
-            return error_msg(request, "Could not create user.")
+            return error_msg(request, "Could not create user. New users are disabled.")
         user = await get_user(new_user.id)
         assert user, "Newly created user has to exist."
         logger.info(f"Create user {user.id}")
