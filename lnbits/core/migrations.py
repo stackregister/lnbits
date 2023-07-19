@@ -302,6 +302,7 @@ async def m010_create_installed_extensions_table(db):
     """
     )
 
+
 async def m011_add_deleted_to_wallets(db):
     """
     Adds deleted column to wallets.
@@ -310,6 +311,7 @@ async def m011_add_deleted_to_wallets(db):
         await db.execute("ALTER TABLE wallets ADD COLUMN deleted BOOLEAN")
     except OperationalError:
         pass
+
 
 async def m012_set_deleted_wallets(db):
     """
@@ -325,10 +327,9 @@ async def m012_set_deleted_wallets(db):
                 AND adminkey LIKE 'del:%'
                 AND inkey LIKE 'del:%'
                 """
-            
             )
         ).fetchall()
-        
+
         for row in rows:
             try:
                 user = row[2].split(":")[1]
@@ -339,9 +340,7 @@ async def m012_set_deleted_wallets(db):
                     UPDATE wallets SET user = ?, adminkey = ?, inkey = ?, deleted = true
                     WHERE id = ?
                     """,
-                    (
-                        user, adminkey, inkey, row[0]
-                    ),
+                    (user, adminkey, inkey, row[0]),
                 )
             except:
                 continue
