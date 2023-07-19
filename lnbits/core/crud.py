@@ -290,7 +290,10 @@ async def get_wallet_for_key(
 
     if not row:
         return None
-
+    
+    if row["deleted"]:
+        return None
+    
     if key_type == "admin" and row["adminkey"] != key:
         return None
 
