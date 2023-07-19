@@ -320,7 +320,7 @@ async def m012_set_deleted_wallets(db):
     try:
         rows = await (
             await db.execute(
-                f"""
+                """
                 SELECT *
                 FROM wallets
                 WHERE user LIKE 'del:%'
