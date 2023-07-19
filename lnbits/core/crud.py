@@ -273,6 +273,9 @@ async def get_wallet(
         (wallet_id,),
     )
 
+    if row["deleted"]:
+        return None
+
     return Wallet(**row) if row else None
 
 
@@ -290,10 +293,10 @@ async def get_wallet_for_key(
 
     if not row:
         return None
-    
+
     if row["deleted"]:
         return None
-    
+
     if key_type == "admin" and row["adminkey"] != key:
         return None
 
