@@ -268,13 +268,11 @@ async def get_wallet(
         """
         SELECT *, COALESCE((SELECT balance FROM balances WHERE wallet = wallets.id), 0) AS balance_msat
         FROM wallets
-        WHERE id = ?
+        WHERE id = ? 
+        AND deleted is NULL OR deleted = false
         """,
         (wallet_id,),
     )
-
-    if row["deleted"]:
-        return None
 
     return Wallet(**row) if row else None
 
@@ -287,14 +285,12 @@ async def get_wallet_for_key(
         SELECT *, COALESCE((SELECT balance FROM balances WHERE wallet = wallets.id), 0) AS balance_msat
         FROM wallets
         WHERE adminkey = ? OR inkey = ?
+        AND deleted is NULL OR deleted = false
         """,
         (key, key),
     )
 
     if not row:
-        return None
-
-    if row["deleted"]:
         return None
 
     if key_type == "admin" and row["adminkey"] != key:
