@@ -1,7 +1,6 @@
 import pytest
 
 from lnbits.core.crud import (
-    create_account,
     create_wallet,
     delete_wallet,
     get_wallet,
@@ -11,14 +10,13 @@ from lnbits.core.crud import (
 
 # make test to create wallet and delete wallet
 @pytest.mark.asyncio
-async def test_create_wallet_and_delete_wallet():
+async def test_create_wallet_and_delete_wallet(to_user):
     # create wallet
-    user = await create_account()
-    wallet = await create_wallet(user_id=user.id, wallet_name="test_wallet_to")
+    wallet = await create_wallet(user_id=to_user.id, wallet_name="test_wallet_delete")
     assert wallet
 
-    #delete wallet
-    await delete_wallet(user_id=user.id, wallet_id=wallet.id)
+    # delete wallet
+    await delete_wallet(user_id=to_user.id, wallet_id=wallet.id)
 
     # check if wallet is deleted
     del_wallet = await get_wallet(wallet.id)
@@ -26,4 +24,3 @@ async def test_create_wallet_and_delete_wallet():
 
     del_wallet = await get_wallet_for_key(wallet.inkey)
     assert del_wallet is None
-    
