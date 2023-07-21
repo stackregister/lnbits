@@ -268,8 +268,7 @@ async def get_wallet(
         """
         SELECT *, COALESCE((SELECT balance FROM balances WHERE wallet = wallets.id), 0) AS balance_msat
         FROM wallets
-        WHERE id = ? 
-        AND deleted is NULL OR deleted = false
+        WHERE id = ? AND deleted is NULL OR deleted = false
         """,
         (wallet_id,),
     )
